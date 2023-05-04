@@ -120,20 +120,19 @@ class LoadTable():
         Table
         
         """
-        obj = cls(
-            table = d['table'],
-            source_type = d['source_type'],
-            path = d['path'],
-            csv_index_cols = d['csv_index_cols'],
-            extra_settings = d['extra_settings'],
-            cache = d['cache'],
-            cache_scope = d['cache_scope'],
-            copy_col = d['copy_col'],
-            name = d['name'],
-            tags = d['tags'],
-            autorun = d['autorun']
+        return cls(
+            table=d['table'],
+            source_type=d['source_type'],
+            path=d['path'],
+            csv_index_cols=d['csv_index_cols'],
+            extra_settings=d['extra_settings'],
+            cache=d['cache'],
+            cache_scope=d['cache_scope'],
+            copy_col=d['copy_col'],
+            name=d['name'],
+            tags=d['tags'],
+            autorun=d['autorun'],
         )
-        return obj
     
     
     def to_dict(self):
@@ -145,7 +144,7 @@ class LoadTable():
         dict
         
         """
-        d = {
+        return {
             'template': self.template,
             'template_version': self.template_version,
             'name': self.name,
@@ -158,9 +157,8 @@ class LoadTable():
             'extra_settings': self.extra_settings,
             'cache': self.cache,
             'cache_scope': self.cache_scope,
-            'copy_col': self.copy_col
+            'copy_col': self.copy_col,
         }
-        return d
     
     
     def run(self):

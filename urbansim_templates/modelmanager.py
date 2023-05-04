@@ -45,37 +45,32 @@ def initialize(path='configs'):
     
     """
     if not os.path.exists(path):
-        print("Path not found: {}".format(os.path.join(os.getcwd(), path)))
+        print(f"Path not found: {os.path.join(os.getcwd(), path)}")
         # TO DO - automatically create directory if run again after warning?
         return
-        
+
     global _steps, _disk_store
     _steps = {}  # clear memory
     _disk_store = path  # save initialization path
-    
-    files = []
-    for f in os.listdir(path):
-        if f[-5:] == '.yaml':
-            files.append(os.path.join(path, f))
-    
-    if len(files) == 0:
-        print("No yaml files found in path '{}'".format(path))
+
+    files = [os.path.join(path, f) for f in os.listdir(path) if f[-5:] == '.yaml']
+    if not files:
+        print(f"No yaml files found in path '{path}'")
         return
-        
+
     steps = []
     for f in files:
         d = yamlio.yaml_to_dict(str_or_buffer=f)
-        if 'modelmanager_version' in d:
-            # TO DO - check that file name matches object name in the file?
-            if version_greater_or_equal(d['modelmanager_version'], '0.1.dev8'):
-                # This is the version that switched from a single file to multiple files
-                # with one object stored in each
-                steps.append(d)            
-    
-    if len(steps) == 0:
-        print("No files from ModelManager 0.1.dev8 or later found in path '{}'"\
-                .format(path))
-    
+        if 'modelmanager_version' in d and version_greater_or_equal(
+            d['modelmanager_version'], '0.1.dev8'
+        ):
+            # This is the version that switched from a single file to multiple files
+            # with one object stored in each
+            steps.append(d)            
+
+    if not steps:
+        print(f"No files from ModelManager 0.1.dev8 or later found in path '{path}'")
+
     for d in steps:
         # TO DO - check for this key, to be safe
         step = build_step(d['saved_object'])
@@ -128,7 +123,7 @@ def load_supplemental_object(step_name, name, content_type, required=True):
     
     """
     if (content_type == 'pickle'):
-        with open(os.path.join(_disk_store, step_name+'-'+name+'.pkl'), 'rb') as f:
+        with open(os.path.join(_disk_store, f'{step_name}-{name}.pkl'), 'rb') as f:
             return pickle.load(f)
     
 
@@ -219,25 +214,24 @@ def save_step_to_disk(step):
     if _disk_store is None:
         print("Please run 'modelmanager.initialize()' before registering new model steps")
         return
-    
-    print("Saving '{}.yaml': {}".format(name, 
-            os.path.join(os.getcwd(), _disk_store)))
-    
+
+    print(f"Saving '{name}.yaml': {os.path.join(os.getcwd(), _disk_store)}")
+
     d = step.to_dict()
-    
+
     # Save supplemental objects
     if 'supplemental_objects' in d:
         for item in filter(None, d['supplemental_objects']):
             save_supplemental_object(name, **item)
             del item['content']
-    
+
     # Save main yaml file
     headers = {'modelmanager_version': __version__}
 
     content = OrderedDict(headers)
     content.update({'saved_object': d})
-    
-    yamlio.convert_to_yaml(content, os.path.join(_disk_store, name+'.yaml'))
+
+    yamlio.convert_to_yaml(content, os.path.join(_disk_store, f'{name}.yaml'))
     
 
 def save_supplemental_object(step_name, name, content, content_type, required=True):
@@ -259,7 +253,7 @@ def save_supplemental_object(step_name, name, content, content_type, required=Tr
     
     """
     if content_type == 'pickle':
-        content.to_pickle(os.path.join(_disk_store, step_name+'-'+name+'.pkl'))
+        content.to_pickle(os.path.join(_disk_store, f'{step_name}-{name}.pkl'))
         
 
 def get_step(name):
@@ -289,16 +283,16 @@ def remove_step(name):
     name : str
     
     """
-    print("Removing '{}' and '{}.yaml'".format(name, name))
-    
+    print(f"Removing '{name}' and '{name}.yaml'")
+
     d = _steps[name].to_dict()
-    
+
     if 'supplemental_objects' in d:
         for item in filter(None, d['supplemental_objects']):
             remove_supplemental_object(name, item['name'], item['content_type'])
 
     del _steps[name]
-    os.remove(os.path.join(_disk_store, name+'.yaml'))
+    os.remove(os.path.join(_disk_store, f'{name}.yaml'))
     
 
 def remove_supplemental_object(step_name, name, content_type):
@@ -316,9 +310,9 @@ def remove_supplemental_object(step_name, name, content_type):
     
     """
     # TO DO - check that the file exists first
-    
+
     if content_type == 'pickle':
-        os.remove(os.path.join(_disk_store, step_name+'-'+name+'.pkl'))
+        os.remove(os.path.join(_disk_store, f'{step_name}-{name}.pkl'))
     
 
 def get_config_dir():

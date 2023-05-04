@@ -62,15 +62,14 @@ class CoreTemplateSettings():
         obj : CoreTemplateSettings
         
         """
-        obj = cls(
-            name = d['name'],
-            tags = d['tags'],
-            notes = d['notes'],
-            autorun = d['autorun'],
-            template = d['template'],
-            template_version = d['template_version'],
+        return cls(
+            name=d['name'],
+            tags=d['tags'],
+            notes=d['notes'],
+            autorun=d['autorun'],
+            template=d['template'],
+            template_version=d['template_version'],
         )
-        return obj
     
     
     def to_dict(self):
@@ -82,7 +81,7 @@ class CoreTemplateSettings():
         d : dict
         
         """
-        d = {
+        return {
             'name': self.name,
             'tags': self.tags,
             'notes': self.notes,
@@ -91,5 +90,4 @@ class CoreTemplateSettings():
             'template_version': self.template_version,
             'modelmanager_version': self.modelmanager_version,
         }
-        return d
 

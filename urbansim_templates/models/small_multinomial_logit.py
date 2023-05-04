@@ -225,13 +225,9 @@ class SmallMultinomialLogitStep(TemplateStep):
         """
         ids = []
         for k, v in self.model_expression.items():
-            # TO DO - check if PyLogit supports v being a non-list (single numeric) 
+            # TO DO - check if PyLogit supports v being a non-list (single numeric)
             for elem in v:
-                if isinstance(elem, list):
-                    ids += elem
-                else:
-                    ids += [elem]
-        
+                ids += elem if isinstance(elem, list) else [elem]
         return np.unique(ids)
     
     
@@ -246,10 +242,10 @@ class SmallMultinomialLogitStep(TemplateStep):
         """
         count = 0
         for k, v in self.model_expression.items():
-            # TO DO - check if PyLogit supports v being a non-list (single numeric) 
-            for elem in v:
+            # TO DO - check if PyLogit supports v being a non-list (single numeric)
+            for _ in v:
                 count += 1
-        
+
         return count
     
     

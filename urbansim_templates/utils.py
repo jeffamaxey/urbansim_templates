@@ -44,11 +44,11 @@ def validate_template(cls):
     except:
         print("Error instantiating object without arguments")
         raise
-    
+
     methods = ['to_dict', 'from_dict', 'run']
     for item in methods:
         if item not in dir(cls):
-            print("Expecting a '{}' method".format(item))
+            print(f"Expecting a '{item}' method")
             return False
 
     try:
@@ -56,13 +56,13 @@ def validate_template(cls):
     except:
         print("Error running 'to_dict()'")
         raise
-    
+
     params = ['name', 'tags', 'template', 'template_version']
     for item in params:
         if item not in d:
-            print("Expecting a '{}' key in dict representation".format(item))
+            print(f"Expecting a '{item}' key in dict representation")
             return False
-    
+
     if (d['template'] != m.__class__.__name__):
         print("Expecting 'template' value in dict to match the class name")
         return False
@@ -72,9 +72,9 @@ def validate_template(cls):
     except:
         print("Error instantiating object with 'from_dict()' method")
         raise
-    
+
     # TO DO - check supplemental objects? (but nothing there with unconfigured steps)
-    
+
     return True
 
 
@@ -131,53 +131,47 @@ def validate_table(table, reciprocal=True):
     # (a) orca_test doesn't currently support MultiIndexes, and (b) the primary-key/
     # foreign-key comparisons aren't asserting anything, just printing status 
     # messages. We should update orca_test to support both, probably.
-    
+
     if not orca.is_table(table):
-        raise ValueError("Table not registered with Orca: '{}'".format(table))
-    
+        raise ValueError(f"Table not registered with Orca: '{table}'")
+
     idx = orca.get_table(table).index
-    
+
     # Check index has a name
     if list(idx.names) == [None]:
         raise ValueError("Index column has no name")
-    
+
     # Check for unique column names
     for name in list(idx.names):
         if name in list(orca.get_table(table).columns):
-            raise ValueError("Index names and column names overlap: '{}'".format(name))
-    
+            raise ValueError(f"Index names and column names overlap: '{name}'")
+
     # Check for unique index values
     if len(idx.unique()) < len(idx):    
         raise ValueError("Index not unique")
-    
+
     # Compare columns to indexes of other tables, and vice versa
     combinations = [(table, t) for t in orca.list_tables() if table != t]
-    
+
     if reciprocal:
         combinations += [(t, table) for t in orca.list_tables() if table != t]
-    
+
     for t1, t2 in combinations:
         col_names = orca.get_table(t1).columns
         idx = orca.get_table(t2).index
-        
+
         if set(idx.names).issubset(col_names):
             vals = orca.get_table(t1).to_frame(idx.names).drop_duplicates()
-            
+
             # Easier to compare multi-column values to multi-column index if we 
             # turn the values into an index as well
             vals = vals.reset_index().set_index(idx.names).index
             vals_in_idx = sum(vals.isin(idx))
-            
-            if len(idx.names) == 1:
-                idx_str = idx.names[0]
-            else:
-                idx_str = '[{}]'.format(','.join(idx.names))
-            
-            print("'{}.{}': {} of {} unique values are found in '{}.{}' ({}%)"\
-                    .format(t1, idx_str, 
-                            vals_in_idx, len(vals), 
-                            t2, idx_str, 
-                            round(100*vals_in_idx/len(vals))))
+
+            idx_str = idx.names[0] if len(idx.names) == 1 else f"[{','.join(idx.names)}]"
+            print(
+                f"'{t1}.{idx_str}': {vals_in_idx} of {len(vals)} unique values are found in '{t2}.{idx_str}' ({round(100 * vals_in_idx / len(vals))}%)"
+            )
 
     return True
 
@@ -251,7 +245,7 @@ def merge_tables(tables, columns=None):
         # last table becomes the source
         source = get_df(tables[-1], columns)
         keys = list(source.index.names)
-        
+
         # search for target table
         target_position = None
         for i in range(len(tables)-2, -1, -1):
@@ -260,20 +254,20 @@ def merge_tables(tables, columns=None):
                 target_columns = columns + keys if columns is not None else None
                 target = get_df(tables[i], target_columns)
                 break
-        
+
         if target_position is None:
-            msg = "Could not find a target to merge table {} onto".format(len(tables))
+            msg = f"Could not find a target to merge table {len(tables)} onto"
             raise ValueError(msg)
 
         # merge source onto target
         merged = target.join(source, on=keys, how='left')  # pandas 0.23+ for on=keys
-        
+
         tables = tables[:-1]
         tables[target_position] = merged
 
     # drop final merge keys if not needed
     merged = trim_cols(merged, columns)
-    
+
     return merged
     
 
@@ -305,18 +299,18 @@ def get_df(table, columns=None):
                            orca.DataFrameWrapper, 
                            orca.TableFuncWrapper, 
                            pd.DataFrame]:
-        raise ValueError("Table has unsupported type: {}".format(type(table)))
-    
+        raise ValueError(f"Table has unsupported type: {type(table)}")
+
     if type(table) == pd.DataFrame:
         return trim_cols(table, columns)
-    
+
     elif type(table) == str:
         table = orca.get_table(table)
-    
+
     if columns is not None:
         # Orca requires column list to be unique and existing, or None
         columns = list(set(columns) & set(table.columns))
-    
+
     return table.to_frame(columns=columns)
     
 
@@ -339,11 +333,11 @@ def all_cols(table):
                            orca.DataFrameWrapper, 
                            orca.TableFuncWrapper, 
                            pd.DataFrame]:
-        raise ValueError("Table has unsupported type: {}".format(type(table)))
+        raise ValueError(f"Table has unsupported type: {type(table)}")
 
     if type(table) == str:
         table = orca.get_table(table)
-    
+
     return list(table.index.names) + list(table.columns)
     
 
@@ -477,18 +471,17 @@ def get_data(tables, fallback_tables=None, filters=None, model_expression=None,
     """
     if tables is None:
         tables = fallback_tables
-    
+
     colnames = None  # this will get all columns
     if (model_expression is not None) or (extra_columns is not None):
         colnames = list(set(columns_in_formula(model_expression) + \
                             columns_in_filters(filters) + to_list(extra_columns)))
 
-    if not isinstance(tables, list):
-        df = get_df(tables, colnames)
-    
-    else:
-        df = merge_tables(tables, colnames)
-    
+    df = (
+        merge_tables(tables, colnames)
+        if isinstance(tables, list)
+        else get_df(tables, colnames)
+    )
     df = apply_filter_query(df, filters)
     return df
     
@@ -568,19 +561,16 @@ def parse_version(v):
     if 'dev' in v:
         v4 = int(v.split('dev')[1])
         v = v.split('dev')[0]  # 0.1.dev0 -> 0.1.
-        
+
         if (v[-1] == '.'):
             v = v[:-1]  # 0.1. -> 0.1
-        
+
     v = v.split('.')
-    
-    v3 = 0
-    if (len(v) == 3):
-        v3 = int(v[2])
-    
+
+    v3 = int(v[2]) if (len(v) == 3) else 0
     v2 = int(v[1])
     v1 = int(v[0])
-    
+
     return (v1, v2, v3, v4)
     
 
@@ -605,27 +595,27 @@ def version_greater_or_equal(a, b):
     """
     a = parse_version(a)
     b = parse_version(b)
-    
+
     if (a[0] > b[0]):
         return True
-    
+
     elif (a[0] == b[0]):
         if (a[1] > b[1]):
             return True
-            
+
         elif (a[1] == b[1]):
             if (a[2] > b[2]):
                 return True
-            
+
             elif (a[2] == b[2]):
-                if (a[3] == None):
+                if a[3] is None:
                     return True
-                
-                elif (b[3] == None):
+
+                elif b[3] is None:
                     return False
-                
+
                 elif (a[3] >= b[3]):
                     return True
-    
+
     return False
     
