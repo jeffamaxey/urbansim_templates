@@ -92,7 +92,7 @@ class TemplateStep(object):
         dict
         
         """
-        d = {
+        return {
             'template': self.template,
             'template_version': self.template_version,
             'name': self.name,
@@ -103,9 +103,8 @@ class TemplateStep(object):
             'out_tables': self.out_tables,
             'out_column': self.out_column,
             'out_transform': self.out_transform,
-            'out_filters': self.out_filters
+            'out_filters': self.out_filters,
         }
-        return d
     
     
     def _normalize_table_param(self, tables):
@@ -170,15 +169,8 @@ class TemplateStep(object):
         str
         
         """
-        if self.out_tables is not None:
-            tables = self.out_tables
-        else:
-            tables = self.tables
-            
-        if isinstance(tables, str):
-            return tables
-        else:
-            return tables[0]
+        tables = self.out_tables if self.out_tables is not None else self.tables
+        return tables if isinstance(tables, str) else tables[0]
         
     
     def _generate_name(self):

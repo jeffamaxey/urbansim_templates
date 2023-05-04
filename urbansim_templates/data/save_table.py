@@ -93,17 +93,16 @@ class SaveTable():
         Table
         
         """
-        obj = cls(
-            table = d['table'], 
-            columns = d['columns'], 
-            filters = d['filters'], 
-            output_type = d['output_type'], 
-            path = d['path'], 
-            extra_settings = d['extra_settings'], 
-            name = d['name'], 
-            tags = d['tags'], 
+        return cls(
+            table=d['table'],
+            columns=d['columns'],
+            filters=d['filters'],
+            output_type=d['output_type'],
+            path=d['path'],
+            extra_settings=d['extra_settings'],
+            name=d['name'],
+            tags=d['tags'],
         )
-        return obj
     
     
     def to_dict(self):
@@ -115,7 +114,7 @@ class SaveTable():
         dict
         
         """
-        d = {
+        return {
             'template': self.template,
             'template_version': self.template_version,
             'name': self.name,
@@ -127,7 +126,6 @@ class SaveTable():
             'path': self.path,
             'extra_settings': self.extra_settings,
         }
-        return d
     
     
     def get_dynamic_filepath(self):
@@ -147,21 +145,15 @@ class SaveTable():
         if self.path is None:
             raise ValueError("Please provide a file path")
 
-        run = 0
-        if orca.is_injectable('run_id'):
-            run = orca.get_injectable('run_id')
-        
-        iter = 0
-        if orca.is_injectable('iter_var'):
-            iter = orca.get_injectable('iter_var')
-        
+        run = orca.get_injectable('run_id') if orca.is_injectable('run_id') else 0
+        iter = orca.get_injectable('iter_var') if orca.is_injectable('iter_var') else 0
         ts = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
-        
+
         s = self.path
         s = s.replace('%RUN%', str(run))
         s = s.replace('%ITER%', str(iter))
         s = s.replace('%TS%', ts)
-        
+
         return s
     
     
@@ -180,28 +172,28 @@ class SaveTable():
         """
         if self.output_type not in ['csv', 'hdf']:
             raise ValueError("Please provide an output type of 'csv' or 'hdf'")
-        
+
         if self.table is None:
             raise ValueError("Please provide the table name")
-        
+
         if self.path is None:
             raise ValueError("Please provide a file path")
-        
+
         kwargs = self.extra_settings
         if kwargs is None:
-            kwargs = dict()
+            kwargs = {}
 
         df = get_data(tables = self.table, 
                       filters = self.filters, 
                       extra_columns = self.columns)
-                
+
         if self.output_type == 'csv':
             df.to_csv(self.get_dynamic_filepath(), **kwargs)
-        
+
         elif self.output_type == 'hdf':
             if 'key' not in kwargs:
                 kwargs['key'] = self.table
-            
+
             df.to_hdf(self.get_dynamic_filepath(), **kwargs)
         
         

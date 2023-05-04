@@ -229,18 +229,19 @@ def test_filter_generation(m):
 
 @pytest.fixture
 def d():
-    d = {'choosers': 'a', 
-         'alternatives': 'b', 
-         'model_expression': 'c', 
-         'choice_column': 'd', 
-         'chooser_sample_size': 'f', 
-         'alt_sample_size': 'h', 
-         'out_choosers': 'i', 
-         'out_alternatives': 'j', 
-         'out_column': 'k', 
-         'out_chooser_filters': 'l',
-         'out_alt_filters': 'm'}
-    return d    
+    return {
+        'choosers': 'a',
+        'alternatives': 'b',
+        'model_expression': 'c',
+        'choice_column': 'd',
+        'chooser_sample_size': 'f',
+        'alt_sample_size': 'h',
+        'out_choosers': 'i',
+        'out_alternatives': 'j',
+        'out_column': 'k',
+        'out_chooser_filters': 'l',
+        'out_alt_filters': 'm',
+    }    
 
 
 def test_initial_propagation_of_defaults(m):

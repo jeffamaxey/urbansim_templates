@@ -265,7 +265,7 @@ class LargeMultinomialLogitStep(TemplateStep):
         dict
 
         """
-        d = {
+        return {
             'template': self.template,
             'template_version': self.template_version,
             'name': self.name,
@@ -291,7 +291,6 @@ class LargeMultinomialLogitStep(TemplateStep):
             'summary_table': self.summary_table,
             'fitted_parameters': self.fitted_parameters,
         }
-        return d
 
     # TO DO - there has got to be a less verbose way to handle getting and setting
 
@@ -521,9 +520,7 @@ class LargeMultinomialLogitStep(TemplateStep):
                 right_index=merge_args.get('right_index', False),
                 suffixes=merge_args.get('suffixes', ('_x', '_y')))
 
-        # aggs
-        aggs = intx_ops.get('aggregations', False)
-        if aggs:
+        if aggs := intx_ops.get('aggregations', False):
             intx_df = intx_df.groupby('mct_index').agg(aggs)
 
         # rename cols
@@ -666,10 +663,11 @@ class LargeMultinomialLogitStep(TemplateStep):
         self.choices = None
 
         if interaction_terms is not None:
-            uniq_intx_idx_names = set([
-                idx for intx in interaction_terms for idx in intx.index.names])
+            uniq_intx_idx_names = {
+                idx for intx in interaction_terms for idx in intx.index.names
+            }
             obs_extra_cols = to_list(self.chooser_size) + \
-                list(uniq_intx_idx_names)
+                    list(uniq_intx_idx_names)
             alts_extra_cols = to_list(
                 self.alt_capacity) + list(uniq_intx_idx_names)
 

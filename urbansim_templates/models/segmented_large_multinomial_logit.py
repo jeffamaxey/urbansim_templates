@@ -108,16 +108,15 @@ class SegmentedLargeMultinomialLogitStep(TemplateStep):
         dict
 
         """
-        d = {
+        return {
             'template': self.template,
             'template_version': self.template_version,
             'name': self.name,
             'tags': self.tags,
             'defaults': self.defaults.to_dict(),
             'segmentation_column': self.segmentation_column,
-            'submodels': {k: m.to_dict() for k, m in self.submodels.items()}
+            'submodels': {k: m.to_dict() for k, m in self.submodels.items()},
         }
-        return d
 
 
     def get_segmentation_column(self, mct=None):
@@ -182,11 +181,11 @@ class SegmentedLargeMultinomialLogitStep(TemplateStep):
 
         cats = col.astype('category').cat.categories.values
 
-        print("Building submodels for {} categories: {}".format(len(cats), cats))
+        print(f"Building submodels for {len(cats)} categories: {cats}")
 
         for cat in cats:
             m = copy.deepcopy(submodel)
-            seg_filter = "{} == '{}'".format(self.segmentation_column, cat)
+            seg_filter = f"{self.segmentation_column} == '{cat}'"
 
             if isinstance(m.chooser_filters, list):
                 m.chooser_filters += [seg_filter]
